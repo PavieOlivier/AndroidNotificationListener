@@ -7,6 +7,7 @@ import android.service.notification.StatusBarNotification
 import org.json.JSONException
 import org.json.JSONObject
 import android.os.Bundle
+import android.util.Log
 
 
 
@@ -16,20 +17,26 @@ import android.os.Bundle
  */
 class NotificationListener : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification) {
-        // Retrieve package name to set as title.
-        val packageName = sbn.packageName
-        // Retrieve extra object from notification to extract payload.
-        val extras = sbn.notification.extras
-        val packageMessage = extras?.getCharSequence(Notification.EXTRA_TEXT).toString()
-        val packageText = extras?.getCharSequence("android.title").toString()
-        val packageExtra = convertBumbleToJsonString(sbn.notification.extras)
-        // Pass data from one activity to another.
-        val intent = Intent(NOTIFICATION_INTENT)
-        intent.putExtra(NOTIFICATION_PACKAGE_NAME, packageName)
-        intent.putExtra(NOTIFICATION_PACKAGE_MESSAGE, packageMessage)
-        intent.putExtra(NOTIFICATION_PACKAGE_TEXT, packageText)
-        intent.putExtra(NOTIFICATION_PACKAGE_EXTRA, packageExtra)
-        sendBroadcast(intent)
+      try
+      {
+          // Retrieve package name to set as title.
+          val packageName = sbn.packageName
+          // Retrieve extra object from notification to extract payload.
+          val extras = sbn.notification.extras
+          val packageMessage = extras?.getCharSequence(Notification.EXTRA_TEXT).toString()
+          val packageText = extras?.getCharSequence("android.title").toString()
+          val packageExtra = convertBumbleToJsonString(sbn.notification.extras)
+          // Pass data from one activity to another.
+          val intent = Intent(NOTIFICATION_INTENT)
+          intent.putExtra(NOTIFICATION_PACKAGE_NAME, packageName)
+          intent.putExtra(NOTIFICATION_PACKAGE_MESSAGE, packageMessage)
+          intent.putExtra(NOTIFICATION_PACKAGE_TEXT, packageText)
+          intent.putExtra(NOTIFICATION_PACKAGE_EXTRA, packageExtra)
+          sendBroadcast(intent) 
+      }
+      catch (error :Exception ){
+          Log.w( "Crashing aborded ", "An exception occured, I do not know yet what causes that error\nIt seams that a bundle is null on a notification received or it is just a bug\nIf you did not receive the notification please raise a complain on my github" );
+      }
     }
 
     companion object {
