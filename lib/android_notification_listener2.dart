@@ -95,7 +95,8 @@ bool _inited = false;
 
 void _init() {
   if (_inited) {
-    throw new Exception("You can not initialize this plugin twice.");
+    throw new NotificationExceptionV2(
+        "You can not initialize this plugin twice.");
   }
   _channel.invokeMethod("init");
   _inited = true;
