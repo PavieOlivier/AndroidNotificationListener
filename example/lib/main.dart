@@ -11,19 +11,30 @@ class MyApp extends StatefulWidget {
   _MyAppState createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   AndroidNotificationListener _notifications;
   StreamSubscription<NotificationEventV2> _subscription;
+  bool _permissionGiven = false;
+  bool _inited = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     initPlatformState();
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
     startListening();
+    updatePermissionState();
+  }
+
+  Future<void> updatePermissionState() async {
+    var permissionGiven = await _notifications.isPermissionGiven();
+    setState(() {
+      _permissionGiven = permissionGiven;
+    });
   }
 
   void onData(NotificationEventV2 event) {
@@ -35,7 +46,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   void startListening() {
-    _notifications = new AndroidNotificationListener();
+    _notifications = AndroidNotificationListener.withoutInit();
     try {
       _subscription = _notifications.notificationStream.listen(onData);
     } on NotificationExceptionV2 catch (exception) {
@@ -54,7 +65,42 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-      ),
+        body: Column(children: [
+          _permissionGiven
+              ? Text("Permission has granted")
+              : Text("Permission has not grant"),
+          _inited
+              ? Text("Plugin inited")
+              : Text("Plugin not inited"),
+          TextButton(
+            child: Text("Init"),
+            onPressed: () {
+              _notifications.init();
+              setState(() {
+                _inited = _notifications.isInited;
+              });
+            },
+          ),
+          TextButton(
+            child: Text("request permission"),
+            onPressed: () {
+              _notifications.requestPermission();
+            },
+          ),
+        ])),
     );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      updatePermissionState();
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    WidgetsBinding.instance.removeObserver(this);
   }
 }

@@ -45,8 +45,31 @@ NotificationEventV2 _notificationEvent(dynamic data) {
 }
 
 class AndroidNotificationListener {
-  static const EventChannel _notificationEventChannel =
-  EventChannel('notifications.eventChannel');
+  EventChannel _notificationEventChannel;
+
+  AndroidNotificationListener.withoutInit() {
+    _notificationEventChannel = EventChannel('notifications.eventChannel');
+  }
+
+  factory AndroidNotificationListener() {
+    final instance = AndroidNotificationListener.withoutInit();
+    _init();
+    return instance;
+  }
+
+  init() {
+    _init();
+  }
+
+  bool get isInited => _inited;
+
+  Future<bool> isPermissionGiven() {
+    return _channel.invokeMethod("permissionGiven");
+  }
+
+  Future<void> requestPermission() {
+    return _channel.invokeMethod("requestPermission");
+  }
 
   Stream<NotificationEventV2> _notificationStream;
 
@@ -63,4 +86,18 @@ class AndroidNotificationListener {
     throw NotificationExceptionV2(
         'Notification API exclusively available on Android!');
   }
+}
+
+const MethodChannel _channel =
+    const MethodChannel('notifications.commandChannel');
+
+bool _inited = false;
+
+void _init() {
+  if (_inited) {
+    throw new NotificationExceptionV2(
+        "You can not initialize this plugin twice.");
+  }
+  _channel.invokeMethod("init");
+  _inited = true;
 }
